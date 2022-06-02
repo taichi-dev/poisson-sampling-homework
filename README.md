@@ -1,4 +1,5 @@
-Click mouse to choose an initial point.
+1. Click mouse to choose an initial point.
+2. Press `p` to save screenshots.
 
 Exmaple:
 
