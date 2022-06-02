@@ -97,11 +97,12 @@ def render():
         uv = tm.vec2(i, j) / iResolution.y
         st = tm.fract(uv * grid_n) - 0.5
         dg = 0.5 - abs(st)
-``
+        d1 = min(dg.x, dg.y)
+        d1 = tm.smoothstep(0.05, 0.0, d1)
+        col = (1 - tm.vec3(d1)) * 0.7
         sf = 2 / iResolution.y
         buf = sample_dist(uv)
         bufSh = sample_dist(uv + tm.vec2(0.005, 0.015))
-        col = tm.vec3(1)
         cCol = tm.vec3(hash21(buf.yz + 0.3),  hash21(buf.yz), hash21(buf.yz + 0.09))
         pat = (abs(tm.fract(-buf.x * 150.0) - 0.5) * 2) / 300
         col = tm.mix(col, tm.vec3(0), (1 - tm.smoothstep(0, 3 * sf, pat)) * 0.25)
@@ -118,7 +119,7 @@ def render():
 
 grid.fill(-1)
 
-window = ti.GUI("Poisson Disk Sampling", res=window_size, fast_gui=True)
+window = ti.GUI("Poisson Disk Sampling", res=(window_size, window_size), fast_gui=True)
 while window.running:
     window.get_event(ti.GUI.PRESS)
     if window.is_pressed(ti.GUI.ESCAPE):
@@ -131,7 +132,8 @@ while window.running:
 
     if window.is_pressed('p'):
         window.set_image(img)
-        window.show('screenshot.png')
+        ti.tools.image.imwrite(img, "screenshot.png")
+
 
     num_samples = poisson_disk_sample(desired_samples)
     compute_distance_field()
