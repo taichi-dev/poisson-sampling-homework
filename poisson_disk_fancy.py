@@ -1,3 +1,7 @@
+"""
+Poisson disk sampling in Taichi.
+Based on code by Yuanming Hu: https://github.com/taichi-dev/poisson_disk_sampling
+"""
 import taichi as ti
 import taichi.math as tm
 
@@ -5,8 +9,8 @@ ti.init(arch=ti.cpu)
 
 grid_n = 20
 dx = 1 / grid_n
-radius = dx * ti.sqrt(2)
-desired_samples = 1000
+radius = dx * tm.sqrt(2)
+desired_samples = 200
 grid = ti.field(dtype=int, shape=(grid_n, grid_n))
 samples = ti.Vector.field(2, dtype=float, shape=desired_samples)
 window_size = 800
@@ -15,13 +19,9 @@ img = ti.Vector.field(3, dtype=float, shape=(window_size, window_size))
 iMouse = ti.Vector.field(2, dtype=float, shape=())
 iMouse[None] = [0.5, 0.5]
 iResolution = tm.vec2(window_size)
-
-
-@ti.kernel
-def refresh_scene():
-    for i, j in dfield:
-        dfield[i, j] = tm.vec4(1e5)
-        img[i, j] = tm.vec3(1)
+head = ti.field(int, shape=())
+tail = ti.field(int, shape=())
+sample_count = ti.field(int, shape=())
 
 
 @ti.func
@@ -29,13 +29,30 @@ def coord_to_index(p):
     return int(p * tm.vec2(grid_n))
 
 
+@ti.kernel
+def refresh_scene():
+    head[None] = 0
+    tail[None] = 1
+    sample_count[None] = 1
+
+    samples[0] = (p0 := iMouse[None])
+    grid[coord_to_index(p0)] = 0
+
+    for i, j in grid:
+        grid[i, j] = -1
+
+    for i, j in dfield:
+        dfield[i, j] = tm.vec4(1e5)
+        img[i, j] = tm.vec3(1)
+
+
 @ti.func
 def find_nearest_point(p):
     x, y = coord_to_index(p)
     dmin = 1e5
     nearest = iMouse[None]
-    for i in range(ti.max(0, x - 2), ti.min(grid_n, x + 3)):
-        for j in range(ti.max(0, y - 2), ti.min(grid_n, y + 3)):
+    for i in range(max(0, x - 2), min(grid_n, x + 3)):
+        for j in range(max(0, y - 2), min(grid_n, y + 3)):
             ind = grid[i, j]
             if ind != -1:
                 q = samples[ind]
@@ -47,13 +64,10 @@ def find_nearest_point(p):
 
 
 @ti.kernel
-def poisson_disk_sample(desired_samples: int) -> int:
-    samples[0] = (p0 := iMouse[None])
-    grid[coord_to_index(p0)]= 0
-    head, tail = 0, 1
-    while head < tail and head < desired_samples:
-        source_x = samples[head]
-        head += 1
+def poisson_disk_sample(num_samples: int) -> int:
+    while head[None] < tail[None] and head[None] < min(num_samples, desired_samples):
+        source_x = samples[head[None]]
+        head[None] += 1
 
         for _ in range(100):
             theta = ti.random() * 2 * tm.pi
@@ -63,11 +77,11 @@ def poisson_disk_sample(desired_samples: int) -> int:
 
             if 0 <= new_x[0] < 1 and 0 <= new_x[1] < 1:
                 collision = (find_nearest_point(new_x)[0] < radius - 1e-6)
-                if not collision and tail < desired_samples:
-                    samples[tail] = new_x
-                    grid[new_index] = tail
-                    tail += 1
-    return tail
+                if not collision and tail[None] < desired_samples:
+                    samples[tail[None]] = new_x
+                    grid[new_index] = tail[None]
+                    tail[None] += 1
+    return tail[None]
 
 
 @ti.func
@@ -77,8 +91,8 @@ def hash21(p):
 
 @ti.func
 def sample_dist(uv):
-    uv = uv * iResolution - 0.5
-    x, y = tm.clamp(0, iResolution, uv).cast(int)
+    uv = uv * iResolution
+    x, y = tm.clamp(0, iResolution - 1, uv).cast(int)
     return dfield[x, y]
 
 
@@ -104,7 +118,7 @@ def render():
         buf = sample_dist(uv)
         bufSh = sample_dist(uv + tm.vec2(0.005, 0.015))
         cCol = tm.vec3(hash21(buf.yz + 0.3),  hash21(buf.yz), hash21(buf.yz + 0.09))
-        pat = (abs(tm.fract(-buf.x * 150.0) - 0.5) * 2) / 300
+        pat = (abs(tm.fract(-buf.x * 120) - 0.5) * 2) / 240
         col = tm.mix(col, tm.vec3(0), (1 - tm.smoothstep(0, 3 * sf, pat)) * 0.25)
         ew, ew2 = 0.005, 0.008
         cCol2 = tm.mix(cCol, tm.vec3(1), 0.9)
@@ -117,26 +131,25 @@ def render():
         img[i, j] = col
 
 
-grid.fill(-1)
+refresh_scene()
+gui = ti.GUI("Poisson Disk Sampling", res=(window_size, window_size))
+gui.fps_limit = 15
+while gui.running:
+    gui.get_event(ti.GUI.PRESS)
+    if gui.is_pressed(ti.GUI.ESCAPE):
+        gui.running = False
 
-window = ti.GUI("Poisson Disk Sampling", res=(window_size, window_size), fast_gui=True)
-while window.running:
-    window.get_event(ti.GUI.PRESS)
-    if window.is_pressed(ti.GUI.ESCAPE):
-        window.running = False
-
-    if window.is_pressed(ti.GUI.LMB):
-        iMouse[None] = window.get_cursor_pos()
-        grid.fill(-1)
+    if gui.is_pressed(ti.GUI.LMB):
+        iMouse[None] = gui.get_cursor_pos()
         refresh_scene()
 
-    if window.is_pressed('p'):
-        window.set_image(img)
-        ti.tools.image.imwrite(img, "screenshot.png")
+    if gui.is_pressed("p"):
+        gui.set_image(img)
+        gui.show("screenshot.png")
 
-
-    num_samples = poisson_disk_sample(desired_samples)
+    poisson_disk_sample(sample_count[None])
+    sample_count[None] += 1
     compute_distance_field()
     render()
-    window.set_image(img)
-    window.show()
+    gui.set_image(img)
+    gui.show()
