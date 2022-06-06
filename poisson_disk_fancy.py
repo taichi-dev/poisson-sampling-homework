@@ -118,7 +118,7 @@ def render():
         buf = sample_dist(uv)
         bufSh = sample_dist(uv + tm.vec2(0.005, 0.015))
         cCol = tm.vec3(hash21(buf.yz + 0.3),  hash21(buf.yz), hash21(buf.yz + 0.09))
-        pat = (abs(tm.fract(-buf.x * 120) - 0.5) * 2) / 240
+        pat = (abs(tm.fract(-buf.x * 150) - 0.5) * 2) / 300
         col = tm.mix(col, tm.vec3(0), (1 - tm.smoothstep(0, 3 * sf, pat)) * 0.25)
         ew, ew2 = 0.005, 0.008
         cCol2 = tm.mix(cCol, tm.vec3(1), 0.9)
