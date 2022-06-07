@@ -1,3 +1,5 @@
+Please submit your work in this [issue](https://github.com/taichi-dev/poisson-sampling-homework/issues/1).
+
 Install taichi:
 
 ```
