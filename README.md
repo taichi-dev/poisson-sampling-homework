@@ -1,6 +1,6 @@
 # The challenge
 
-Challenge 1 (easy): modify the code so that it works for any resolution `(width, height)`, like 640x480.
+Challenge 1 (easy): modify the code so that it works for any resolution `(width, height)`, e.g. `640 x 480`.
 
 Challenge 2 (medium): implement Bridson's Poisson disk sampling algorithm with other Python packages, use the same config with this repo (400x400 grid and 100K desired points) and whatever acceleration tricks. See if you can beat the speed of Taichi.
 
