@@ -1,5 +1,5 @@
 """
-Poisson disk sampling in Taichi.
+Poisson disk sampling in Taichi, a fancy version.
 Based on code by Yuanming Hu: https://github.com/taichi-dev/poisson_disk_sampling
 """
 import taichi as ti
