@@ -71,7 +71,7 @@ def poisson_disk_sample(num_samples: int) -> int:
 
         for _ in range(100):
             theta = ti.random() * 2 * tm.pi
-            offset = tm.vec2(ti.cos(theta), ti.sin(theta)) * (1 + ti.random()) * radius
+            offset = tm.vec2(tm.cos(theta), tm.sin(theta)) * (1 + ti.random()) * radius
             new_x = source_x + offset
             new_index = coord_to_index(new_x)
 
@@ -86,7 +86,7 @@ def poisson_disk_sample(num_samples: int) -> int:
 
 @ti.func
 def hash21(p):
-    return tm.fract(ti.sin(tm.dot(p, tm.vec2(127.619, 157.583))) * 43758.5453)
+    return tm.fract(tm.sin(tm.dot(p, tm.vec2(127.619, 157.583))) * 43758.5453)
 
 
 @ti.func
@@ -127,7 +127,7 @@ def render():
         col = tm.mix(col, cCol2,  1 - tm.smoothstep(sf, 0, -buf.x - ew))
         col = tm.mix(col, tm.vec3(0),  1 - tm.smoothstep(sf, 0, -buf.x - ew2 - ew))
         col = tm.mix(col, cCol,  1 - tm.smoothstep(sf, 0., -buf.x - ew2 - ew * 2))
-        col = ti.sqrt(max(col, 0))
+        col = tm.sqrt(max(col, 0))
         img[i, j] = col
 
 
