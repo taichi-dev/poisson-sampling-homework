@@ -24,7 +24,7 @@ Mouse and keyboard control:
 Exmaple:
 
 <p align="center">
-  <img src="./demo.jpg">
+  <img src="./demo.jpg" width="400" ></img>
 </p>
 
 
