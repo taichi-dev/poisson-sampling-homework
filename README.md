@@ -34,4 +34,4 @@ See this repo:
 
 https://github.com/taichi-dev/taichi_benchmark/tree/main/poisson
 
-You are encouraged to implement a faster one to beat Taichi!
+You are encouraged to implement a faster one to beat ours!
