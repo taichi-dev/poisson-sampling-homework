@@ -26,3 +26,12 @@ Exmaple:
 <p align="center">
   <img src="./demo.jpg">
 </p>
+
+
+# Benchmark with NumPy and Numba
+
+See this repo:
+
+https://github.com/taichi-dev/taichi_benchmark/tree/main/poisson
+
+You are encouraged to implement a faster one to beat Taichi!
