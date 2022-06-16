@@ -21,7 +21,7 @@ Mouse and keyboard control:
 1. Click mouse to choose an initial point.
 2. Press `p` to save screenshots.
 
-Exmaple:
+Example:
 
 <p align="center">
   <img src="./demo.jpg" width="400" ></img>
